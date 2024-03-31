@@ -48,3 +48,5 @@ SELECT * FROM book
 
 </details>
 
+
+1.2 Выборка данных

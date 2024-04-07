@@ -331,3 +331,94 @@ having sum(amount) > avg(amount)
 
 </details>
 
+### 1.4   Вложенные запросы
+
+Шаг_2. Вывести информацию (автора, название и цену) о  книгах, цены которых меньше или равны средней цене книг на складе. Информацию вывести в отсортированном по убыванию цены виде. Среднее вычислить как среднее по цене книги. [(сайт)](https://stepik.org/lesson/297514/step/2?unit=279274)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select author, title, price 
+from book
+where price <= (select avg(price) from book)
+order by price desc
+```
+
+</details>
+
+Шаг_3. Вывести информацию (автора, название и цену) о тех книгах, цены которых превышают минимальную цену книги на складе не более чем на 150 рублей в отсортированном по возрастанию цены виде. [(сайт)](https://stepik.org/lesson/297514/step/3?unit=279274)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT author, title, price
+FROM book
+WHERE (price - (SELECT MIN(price) FROM book)) <=150
+ORDER BY price
+```
+
+</details>
+
+Шаг_4. Вывести информацию (автора, книгу и количество) о тех книгах, количество экземпляров которых в таблице book не дублируется. [(сайт)](https://stepik.org/lesson/297514/step/4?unit=279274)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select author, title, amount 
+from book
+where amount in (
+                select amount from book
+                group by amount  
+                having count(*) = 1
+                )
+```
+
+</details>
+
+Шаг_5. Вывести информацию о книгах(автор, название, цена), цена которых меньше самой большой из минимальных цен, вычисленных для каждого автора. [(сайт)](https://stepik.org/lesson/297514/step/5?unit=279274)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select author, title, price
+from book
+where price < ANY( SELECT MIN(price) 
+                   FROM book 
+                   GROUP BY author
+                   having MIN(price)
+                  )
+```
+
+</details>
+
+Шаг_6. Посчитать сколько и каких экземпляров книг нужно заказать поставщикам, чтобы на складе стало одинаковое количество экземпляров каждой книги, равное значению самого большего количества экземпляров одной книги на складе. Вывести название книги, ее автора, текущее количество экземпляров на складе и количество заказываемых экземпляров книг. Последнему столбцу присвоить имя Заказ. В результат не включать книги, которые заказывать не нужно. [(сайт)](https://stepik.org/lesson/297514/step/6?unit=279274)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select title, author, amount, ((select max(amount) from book) - amount) as "Заказ" 
+from book
+where ((select max(amount) from book) - amount) <> 0 
+```
+
+</details>
+
+Шаг_7. При продаже всех книг, какая книга принесет больше всего выручки, в процентах.
+Отсортировать по убыванию процентов. [(сайт)](https://stepik.org/lesson/297514/step/7?unit=279274)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select author, title, price, amount, round(price*amount/(select sum(price*amount) from book)*100,2) as  income_percent 
+from book
+order by 5 desc 
+```
+
+</details>
+

@@ -582,3 +582,151 @@ WHERE book.title = supply.title AND book.amount IS NULL;
 
 </details>
 
+### 1.6 Таблица "Командировки", запросы на выборку
+
+Шаг_2. Вывести из таблицы trip информацию о командировках тех сотрудников, фамилия которых заканчивается на букву «а», в отсортированном по убыванию даты последнего дня командировки виде. В результат включить столбцы name, city, per_diem, date_first, date_last. [(сайт)](https://stepik.org/lesson/297510/step/2?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name, city, per_diem, date_first, date_last
+from trip
+where name like '%а %'
+order by date_last desc
+```
+
+</details>
+
+Шаг_3. Вывести в алфавитном порядке фамилии и инициалы тех сотрудников, которые были в командировке в Москве. [(сайт)](https://stepik.org/lesson/297510/step/3?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select distinct name 
+from trip
+where city = 'Москва'
+order by name asc 
+```
+
+</details>
+
+Шаг_4. Для каждого города посчитать, сколько раз сотрудники в нем были.  Информацию вывести в отсортированном в алфавитном порядке по названию городов. Вычисляемый столбец назвать Количество.  [(сайт)](https://stepik.org/lesson/297510/step/4?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select city, count(name) as 'Количество'
+from trip
+group by city
+order by city asc 
+```
+
+</details>
+
+Шаг_5. Вывести два города, в которых чаще всего были в командировках сотрудники. Вычисляемый столбец назвать Количество.  [(сайт)](https://stepik.org/lesson/297510/step/5?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select city, count(name) as 'Количество'
+from trip 
+group by city 
+order by 2 desc
+limit 2
+```
+
+</details>
+
+Шаг_6. Вывести информацию о командировках во все города кроме Москвы и Санкт-Петербурга (фамилии и инициалы сотрудников, город ,  длительность командировки в днях, при этом первый и последний день относится к периоду командировки). Последний столбец назвать Длительность. Информацию вывести в упорядоченном по убыванию длительности поездки, а потом по убыванию названий городов (в обратном алфавитном порядке).  [(сайт)](https://stepik.org/lesson/297510/step/6?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name, city, DATEDIFF(date_last,date_first)+1 as 'Длительность'
+from trip
+where city not in('Москва','Санкт-Петербург')
+order by 3 desc, 2 desc
+```
+
+</details>
+
+Шаг_7. Вывести информацию о командировках сотрудника(ов), которые были самыми короткими по времени. В результат включить столбцы name, city, date_first, date_last.  [(сайт)](https://stepik.org/lesson/297510/step/7?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name, city, date_first, date_last
+from trip
+where DATEDIFF(date_last,date_first) in (
+    select MIN(DATEDIFF(date_last,date_first)) as 'min'
+    from trip)
+```
+
+</details>
+
+Шаг_8. Вывести информацию о командировках, начало и конец которых относятся к одному месяцу (год может быть любой). В результат включить столбцы name, city, date_first, date_last. Строки отсортировать сначала  в алфавитном порядке по названию города, а затем по фамилии сотрудника .  [(сайт)](https://stepik.org/lesson/297510/step/8?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name, city, date_first, date_last
+from trip
+where MONTH(date_first) = MONTH(date_last)
+order by city asc, name asc  
+```
+
+</details>
+
+Шаг_9. Вывести название месяца и количество командировок для каждого месяца. Считаем, что командировка относится к некоторому месяцу, если она началась в этом месяце. Информацию вывести сначала в отсортированном по убыванию количества, а потом в алфавитном порядке по названию месяца виде. Название столбцов – Месяц и Количество.  [(сайт)](https://stepik.org/lesson/297510/step/9?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select MONTHNAME(date_first) as  'Месяц' , count(*) as 'Количество'
+from trip 
+group by 1
+order by 2 desc, 1 asc  
+```
+
+</details>
+
+Шаг_10. Вывести сумму суточных (произведение количества дней командировки и размера суточных) для командировок, первый день которых пришелся на февраль или март 2020 года. Значение суточных для каждой командировки занесено в столбец per_diem. Вывести фамилию и инициалы сотрудника, город, первый день командировки и сумму суточных. Последний столбец назвать Сумма. Информацию отсортировать сначала  в алфавитном порядке по фамилиям сотрудников, а затем по убыванию суммы суточных.  [(сайт)](https://stepik.org/lesson/297510/step/10?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name, city, date_first, per_diem * (DATEDIFF(date_last,date_first)+1) as 'Сумма'
+from trip
+where MONTH(date_first) in (2,3) and YEAR(date_first) = 2020 
+order by name asc, per_diem asc 
+```
+
+</details>
+
+Шаг_11. Вывести фамилию с инициалами и общую сумму суточных, полученных за все командировки для тех сотрудников, которые были в командировках больше чем 3 раза, в отсортированном по убыванию сумм суточных виде. Последний столбец назвать Сумма.  [(сайт)](https://stepik.org/lesson/297510/step/11?unit=279270)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name, sum(per_diem*(datediff(date_last,date_first)+1)) as 'Сумма'
+from trip 
+where name in (select name
+               from trip
+               group by name
+               having count(*)>3)
+group by name
+order by 2 desc
+```
+
+</details>
+

@@ -730,3 +730,131 @@ order by 2 desc
 
 </details>
 
+### 1.7 Таблица "Нарушения ПДД", запросы корректировки
+
+Шаг_2. Создать таблицу fine. [(сайт)](https://stepik.org/lesson/305762/step/2?unit=287773)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+CREATE TABLE fine(
+    fine_id INT PRIMARY KEY AUTO_INCREMENT, 
+    name VARCHAR(30),
+    number_plate VARCHAR(6),
+    violation VARCHAR(50),
+    sum_fine  DECIMAL(8, 2),
+    date_violation date,
+    date_payment date)
+```
+
+</details>
+
+Шаг_3. В таблицу fine первые 5 строк уже занесены. Добавить в таблицу записи с ключевыми значениями 6, 7, 8. [(сайт)](https://stepik.org/lesson/305762/step/3?unit=287773)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+INSERT INTO fine
+(name, number_plate, violation, sum_fine, date_violation, date_payment)
+VALUES
+('Баранов П.Е.', 'Р523ВТ', 'Превышение скорости(от 40 до 60)', Null, '2020-02-14', Null),
+('Абрамова К.А.', 'О111АВ', 'Проезд на запрещающий сигнал', Null, '2020-02-23', Null),
+('Яковлев Г.Р.', 'Т330ТТ', 'Проезд на запрещающий сигнал', Null, '2020-03-03', Null);
+SELECT * FROM fine
+```
+
+</details>
+
+Шаг_4. Занести в таблицу fine суммы штрафов, которые должен оплатить водитель, в соответствии с данными из таблицы traffic_violation. При этом суммы заносить только в пустые поля столбца  sum_fine. Таблица traffic_violationсоздана и заполнена. Важно! Сравнение значения столбца с пустым значением осуществляется с помощью оператора IS NULL. [(сайт)](https://stepik.org/lesson/305762/step/4?unit=287773)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE fine
+SET sum_fine=(SELECT sum_fine FROM traffic_violation WHERE traffic_violation.violation=fine.violation)
+WHERE sum_fine is NULL
+```
+
+</details>
+
+Шаг_5. Вывести фамилию, номер машины и нарушение только для тех водителей, которые на одной машине нарушили одно и то же правило   два и более раз. При этом учитывать все нарушения, независимо от того оплачены они или нет. Информацию отсортировать в алфавитном порядке, сначала по фамилии водителя, потом по номеру машины и, наконец, по нарушению. [(сайт)](https://stepik.org/lesson/305762/step/5?unit=287773)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT name, number_plate, violation
+FROM fine
+GROUP BY name, number_plate, violation
+HAVING COUNT(*)>1
+ORDER BY name;
+```
+
+</details>
+
+Шаг_6. В таблице fine увеличить в два раза сумму неоплаченных штрафов для отобранных на предыдущем шаге записей.  [(сайт)](https://stepik.org/lesson/305762/step/6?unit=287773)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+update fine
+set sum_fine = sum_fine * 2
+where date_payment is null and 
+(name, number_plate, violation) in
+(select * from (select name, number_plate, violation
+                from fine
+                group by name, number_plate, violation
+                having count(*) > 1) as T);
+```
+
+</details>
+
+Шаг_7. Водители оплачивают свои штрафы. В таблице payment занесены даты их оплаты:  [(сайт)](https://stepik.org/lesson/305762/step/7?unit=287773)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE   fine f, payment p 
+SET f.date_payment = p.date_payment, 
+    f.sum_fine = IF( DATEDIFF(p.date_payment, p.date_violation) <= 20, f.sum_fine / 2, f.sum_fine) 
+WHERE (f.name, f.number_plate, f.violation) = (p.name, p.number_plate, p.violation)
+       AND f.date_payment IS null;  
+   
+SELECT * FROM fine;
+```
+
+</details>
+
+Шаг_8. Создать новую таблицу back_payment, куда внести информацию о неоплаченных штрафах (Фамилию и инициалы водителя, номер машины, нарушение, сумму штрафа  и  дату нарушения) из таблицы fine.  [(сайт)](https://stepik.org/lesson/305762/step/8?unit=287773)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+CREATE TABLE back_payment AS
+ (
+    SELECT name, number_plate, violation, sum_fine, date_violation
+    FROM fine AS f
+    WHERE f.date_payment IS NULL
+  )
+```
+
+</details>
+
+Шаг_9. Удалить из таблицы fine информацию о нарушениях, совершенных раньше 1 февраля 2020 года.   [(сайт)](https://stepik.org/lesson/305762/step/9?unit=287773)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+delete from fine
+where date_violation < '2020-02-01'
+```
+
+</details>
+

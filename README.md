@@ -858,3 +858,19 @@ where date_violation < '2020-02-01'
 
 </details>
 
+### 2.1 Связи между таблицами
+
+Шаг_6. Создать таблицу author. [(сайт)](https://stepik.org/lesson/308885/step/6?unit=291011)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+create table author (
+  author_id  INT PRIMARY KEY AUTO_INCREMENT,
+  name_author VARCHAR(50))
+```
+
+</details>
+
+

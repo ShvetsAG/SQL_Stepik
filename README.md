@@ -959,3 +959,131 @@ order by price desc
 ```
 
 </details>
+
+Шаг_3. Вывести все жанры, которые не представлены в книгах на складе. [(сайт)](https://stepik.org/lesson/308886/step/3?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_genre
+from genre left join book
+on genre.genre_id = book.genre_id
+where title is null
+```
+
+</details>
+
+Шаг_4. Необходимо в каждом городе провести выставку книг каждого автора в течение 2020 года. Дату проведения выставки выбрать случайным образом. Создать запрос, который выведет город, автора и дату проведения выставки. Последний столбец назвать Дата. Информацию вывести, отсортировав сначала в алфавитном порядке по названиям городов, а потом по убыванию дат проведения выставок. [(сайт)](https://stepik.org/lesson/308886/step/4?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_city,name_author, DATE_ADD('2020-01-01', INTERVAL ROUND(RAND() * 365) DAY) AS Дата
+from city cross join author
+order by name_city asc, Дата desc
+```
+
+</details>
+
+Шаг_5. Вывести информацию о книгах (жанр, книга, автор), относящихся к жанру, включающему слово «роман» в отсортированном по названиям книг виде. [(сайт)](https://stepik.org/lesson/308886/step/5?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT name_genre, title, name_author
+from book join genre using(genre_id)
+          join author using(author_id)
+where name_genre = 'Роман'
+order by title
+```
+
+</details>
+
+Шаг_6. Посчитать количество экземпляров  книг каждого автора из таблицы author.  Вывести тех авторов,  количество книг которых меньше 10, в отсортированном по возрастанию количества виде. Последний столбец назвать Количество. [(сайт)](https://stepik.org/lesson/308886/step/6?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_author, sum(amount) as 'Количество'
+from book right join author
+          using(author_id)          
+group by name_author
+having Количество < 10 or Количество is null
+order by Количество asc
+```
+
+</details>
+
+Шаг_7. Вывести в алфавитном порядке всех авторов, которые пишут только в одном жанре. Поскольку у нас в таблицах так занесены данные, что у каждого автора книги только в одном жанре,  для этого запроса внесем изменения в таблицу book. Пусть у нас  книга Есенина «Черный человек» относится к жанру «Роман», а книга Булгакова «Белая гвардия» к «Приключениям» (эти изменения в таблицы уже внесены). [(сайт)](https://stepik.org/lesson/308886/step/7?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+ select name_author 
+ from  author
+ where author_id in        
+                    (select author_id
+                    from book join genre using(genre_id)
+                    group by author_id
+                    having count(distinct genre_id) = 1)
+order by name_author asc
+```
+
+</details>
+
+Шаг_8. Вывести информацию о книгах (название книги, фамилию и инициалы автора, название жанра, цену и количество экземпляров книги), написанных в самых популярных жанрах, в отсортированном в алфавитном порядке по названию книг виде. Самым популярным считать жанр, общее количество экземпляров книг которого на складе максимально. [(сайт)](https://stepik.org/lesson/308886/step/8?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select  title, name_author, name_genre, price, amount              
+from book join genre  using(genre_id)
+          join author  using(author_id) 
+where genre_id in ( select  genre_id
+                    from book  
+                    group by genre_id
+                    having sum(amount) = (SELECT SUM(amount)
+                                          FROM book
+                                          GROUP BY genre_id
+                                          limit 1))                                           
+order by  title
+```
+
+</details>
+
+Шаг_9. Если в таблицах supply  и book есть одинаковые книги, которые имеют равную цену,  вывести их название и автора, а также посчитать общее количество экземпляров книг в таблицах supply и book,  столбцы назвать Название, Автор  и Количество. [(сайт)](https://stepik.org/lesson/308886/step/9?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select title as 'Название' ,name_author as 'Автор' , book.amount+supply.amount as 'Количество'
+from book join author using(author_id)
+          join supply USING(title, price)
+where price in (select distinct price
+                from supply)
+```
+
+</details>
+
+Шаг_10. Для каждого автора из таблицы author вывести количество книг, написанных им в каждом жанре.
+Вывод: ФИО автора, жанр, количество. Отсортировать по фамилии, затем - по убыванию количества написанных книг. [(сайт)](https://stepik.org/lesson/308886/step/10?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_author, name_genre, count(title) as количество
+from author  inner join genre
+left join book using(author_id, genre_id)
+group by name_author, name_genre
+order by name_author, количество desc
+```
+
+</details>

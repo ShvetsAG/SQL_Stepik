@@ -943,3 +943,19 @@ value ('Стихотворения и поэмы', 3, 2, 650.00, 15),
 </details>
 
 
+### 2.2 Запросы на выборку, соединение таблиц
+
+Шаг_2. Вывести название, жанр и цену тех книг, количество которых больше 8, в отсортированном по убыванию цены виде. [(сайт)](https://stepik.org/lesson/308886/step/2?unit=291012)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select title, name_genre, price 
+from book b inner join  genre g
+ on b.genre_id = g.genre_id
+where amount > 8 
+order by price desc
+```
+
+</details>

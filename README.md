@@ -1087,3 +1087,168 @@ order by name_author, количество desc
 ```
 
 </details>
+
+### 2.3 Запросы корректировки, соединение таблиц
+
+Шаг_2. Для книг, которые уже есть на складе (в таблице book), но по другой цене, чем в поставке (supply),  необходимо в таблице book увеличить количество на значение, указанное в поставке,  и пересчитать цену. А в таблице  supply обнулить количество этих книг. [(сайт)](https://stepik.org/lesson/308887/step/2?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE book 
+     INNER JOIN author ON author.author_id = book.author_id
+     INNER JOIN supply ON book.title = supply.title 
+                         and supply.author = author.name_author
+SET book.amount = book.amount + supply.amount, supply.amount = 0,
+book.price = (book.price*book.amount + supply.price*supply.amount)/(book.amount + supply.amount)
+WHERE book.price <> supply.price;
+
+SELECT * FROM book;
+
+SELECT * FROM supply;
+```
+
+</details>
+
+Шаг_3. Включить новых авторов в таблицу author с помощью запроса на добавление, а затем вывести все данные из таблицы author.  Новыми считаются авторы, которые есть в таблице supply, но нет в таблице author. [(сайт)](https://stepik.org/lesson/308887/step/3?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+insert into author (name_author)
+select supply.author
+from supply left join author on supply.author = author.name_author
+where name_author is null
+```
+
+</details>
+
+Шаг_4. Добавить новые книги из таблицы supply в таблицу book на основе сформированного выше запроса. Затем вывести для просмотра таблицу book. [(сайт)](https://stepik.org/lesson/308887/step/4?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+INSERT INTO book (title, author_id, price, amount)
+SELECT title, author_id, price, amount
+FROM 
+    author 
+    INNER JOIN supply ON author.name_author = supply.author
+WHERE amount <> 0;
+
+SELECT * FROM book; 
+```
+
+</details>
+
+Шаг_5. Занести для книги «Стихотворения и поэмы» Лермонтова жанр «Поэзия», а для книги «Остров сокровищ» Стивенсона - «Приключения». (Использовать два запроса) [(сайт)](https://stepik.org/lesson/308887/step/5?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE book
+SET genre_id=2
+WHERE book_id=10;
+UPDATE book
+SET genre_id=3 
+WHERE book_id=11;
+SELECT*FROM book;
+```
+
+</details>
+
+Шаг_6. Удалить всех авторов и все их книги, общее количество книг которых меньше 20. [(сайт)](https://stepik.org/lesson/308887/step/6?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+delete from author
+where author_id in (
+                    select author_id
+                    from book
+                    group by   author_id 
+                    having sum(amount) < 20)
+```
+
+</details>
+
+Шаг_7. Удалить все жанры, к которым относится меньше 4-х наименований книг. В таблице book для этих жанров установить значение Null. [(сайт)](https://stepik.org/lesson/308887/step/7?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+DELETE FROM genre
+WHERE genre_id IN ( SELECT genre_id
+                   FROM book
+                   GROUP BY genre_id
+                   HAVING count(title) < 4);
+SELECT *
+FROM book;
+
+SELECT *
+FROM genre;
+```
+
+</details>
+
+Шаг_8. Удалить всех авторов, которые пишут в жанре "Поэзия". Из таблицы book удалить все книги этих авторов. В запросе для отбора авторов использовать полное название жанра, а не его id. [(сайт)](https://stepik.org/lesson/308887/step/8?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+DELETE FROM author
+USING 
+    author 
+    LEFT JOIN book ON author.author_id = book.author_id
+    LEFT JOIN genre on genre.genre_id = book.genre_id
+WHERE genre.name_genre = 'Поэзия';
+
+SELECT * FROM author;
+
+SELECT * FROM book;
+```
+
+</details>
+
+
+Шаг_9. Добавим книги, которых нет в book, из supply. Для этого сначала добавим авторов в author, затем книги, затем вручную укажем жанр новым книгам.
+Изменим цену книг в book, заменив ее на среднюю цену книг того же жанра. То есть в основном запросе на изменение цены UPDATE book SET... мы пишем подзапрос, который считает среднюю цену книг каждого жанра (AVG(price), GROUP BY genre_id) и обновляет цену в зависимости от того, к какому жанру принадлежит конкретная книга. [(сайт)](https://stepik.org/lesson/308887/step/9?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select * from genre;
+INSERT INTO genre (name_genre) VALUES ('Страшилка');
+select * from genre;
+
+select * from book;
+
+UPDATE book
+SET genre_id = (
+    SELECT
+        genre_id
+    FROM genre
+    WHERE name_genre = 'Страшилка')
+WHERE author_id IN (
+    SELECT 
+        author_id
+    FROM author
+    WHERE name_author IN ('Достоевский Ф.М.', 'Булгаков М.А.'));
+select * from book;
+
+
+select * from supply;
+
+UPDATE supply
+SET amount = supply.amount + 100
+WHERE author IN ('Достоевский Ф.М.', 'Булгаков М.А.');
+```
+
+</details>

@@ -1252,3 +1252,22 @@ WHERE author IN ('Достоевский Ф.М.', 'Булгаков М.А.');
 ```
 
 </details>
+
+### 2.3 Запросы корректировки, соединение таблиц
+
+Шаг_2. Для книг, которые уже есть на складе (в таблице book), но по другой цене, чем в поставке (supply),  необходимо в таблице book увеличить количество на значение, указанное в поставке,  и пересчитать цену. А в таблице  supply обнулить количество этих книг. [(сайт)](https://stepik.org/lesson/308887/step/2?unit=291013)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE book 
+     INNER JOIN author ON author.author_id = book.author_id
+     INNER JOIN supply ON book.title = supply.title 
+                         and supply.author = author.name_author
+SET book.amount = book.amount + supply.amount, supply.amount = 0,
+book.price = (book.price*book.amount + supply.price*supply.amount)/(book.amount + supply.amount)
+WHERE book.price <> supply.price;
+```
+
+</details>

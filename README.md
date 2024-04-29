@@ -1255,7 +1255,7 @@ WHERE author IN ('Достоевский Ф.М.', 'Булгаков М.А.');
 
 ### 2.4 База данных «Интернет-магазин книг», запросы на выборку
 
-Шаг_2. Вывести все заказы Баранова Павла (id заказа, какие книги, по какой цене и в каком количестве он заказал) в отсортированном по номеру заказа и названиям книг виде. [(сайт)](https://stepik.org/lesson/308891/step/5?unit=291017)
+Шаг_5. Вывести все заказы Баранова Павла (id заказа, какие книги, по какой цене и в каком количестве он заказал) в отсортированном по номеру заказа и названиям книг виде. [(сайт)](https://stepik.org/lesson/308891/step/5?unit=291017)
 
 <details>
   <summary>Решение</summary>
@@ -1270,6 +1270,204 @@ from buy_book inner join book
               using (client_id)
 where name_client = 'Баранов Павел'
 order by 1,2
+```
+
+</details>
+
+Шаг_6. Посчитать, сколько раз была заказана каждая книга, для книги вывести ее автора (нужно посчитать, в каком количестве заказов фигурирует каждая книга).  Вывести фамилию и инициалы автора, название книги, последний столбец назвать Количество. Результат отсортировать сначала  по фамилиям авторов, а потом по названиям книг. [(сайт)](https://stepik.org/lesson/308891/step/6?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_author, title, count(buy_id) as 'Количество'
+from buy_book right join book using (book_id)
+              join author using (author_id)
+group by name_author, title
+order by 1,2
+```
+
+</details>
+
+Шаг_7. Вывести города, в которых живут клиенты, оформлявшие заказы в интернет-магазине. Указать количество заказов в каждый город, этот столбец назвать Количество. Информацию вывести по убыванию количества заказов, а затем в алфавитном порядке по названию городов. [(сайт)](https://stepik.org/lesson/308891/step/7?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select  name_city, count(client_id)  as 'Количество'
+from city join client using(city_id)
+          join buy using(client_id)
+group by name_city
+order by 2 desc, 1 asc
+```
+
+</details>
+
+Шаг_8. Вывести номера всех оплаченных заказов и даты, когда они были оплачены. [(сайт)](https://stepik.org/lesson/308891/step/8?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select buy_id, date_step_end
+from buy_step join step using(step_id)
+where name_step = 'Оплата' and date_step_end
+```
+
+</details>
+
+Шаг_9. Вывести информацию о каждом заказе: его номер, кто его сформировал (фамилия пользователя) и его стоимость (сумма произведений количества заказанных книг и их цены), в отсортированном по номеру заказа виде. Последний столбец назвать Стоимость. [(сайт)](https://stepik.org/lesson/308891/step/9?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select buy.buy_id, name_client, sum(buy_book.amount*price) as 'Стоимость'
+from buy join client using(client_id)
+         join buy_book using(buy_id)
+         join book using(book_id)
+group by  buy.buy_id, name_client
+order by 1
+```
+
+</details>
+
+Шаг_10. Вывести номера заказов (buy_id) и названия этапов,  на которых они в данный момент находятся. Если заказ доставлен –  информацию о нем не выводить. Информацию отсортировать по возрастанию buy_id. [(сайт)](https://stepik.org/lesson/308891/step/10?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT buy_id, name_step
+FROM buy_step JOIN step USING(step_id)
+WHERE date_step_beg AND date_step_end IS NULL
+ORDER BY 1;
+```
+
+</details>
+
+Шаг_11*. В таблице city для каждого города указано количество дней, за которые заказ может быть доставлен в этот город (рассматривается только этап Транспортировка). Для тех заказов, которые прошли этап транспортировки, вывести количество дней за которое заказ реально доставлен в город. А также, если заказ доставлен с опозданием, указать количество дней задержки, в противном случае вывести 0. В результат включить номер заказа (buy_id), а также вычисляемые столбцы Количество_дней и Опоздание. Информацию вывести в отсортированном по номеру заказа виде. [(сайт)](https://stepik.org/lesson/308891/step/11?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT
+    buy_id,
+    (@D := DATEDIFF(date_step_end, date_step_beg)) AS Количество_дней,
+    GREATEST(@D - days_delivery, 0) AS Опоздание
+FROM
+    buy
+     JOIN buy_step USING(buy_id)
+     JOIN step     USING(step_id)
+     JOIN client   USING(client_id)
+     JOIN city     USING(city_id)
+WHERE
+    name_step = 'Транспортировка' AND date_step_end 
+ORDER BY buy_id;
+```
+
+</details>
+
+Шаг_12. Выбрать всех клиентов, которые заказывали книги Достоевского, информацию вывести в отсортированном по алфавиту виде. В решении используйте фамилию автора, а не его id. [(сайт)](https://stepik.org/lesson/308891/step/12?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT DISTINCT name_client FROM author
+    JOIN book ON (author.author_id=book.author_id) AND (author.name_author="Достоевский Ф.М.")
+    JOIN buy_book USING(book_id)
+    JOIN buy USING(buy_id)
+    JOIN client USING(client_id)
+ORDER BY name_client;
+```
+
+</details>
+
+Шаг_13. Вывести жанр (или жанры), в котором было заказано больше всего экземпляров книг, указать это количество. Последний столбец назвать Количество. [(сайт)](https://stepik.org/lesson/308891/step/13?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT genre.name_genre, SUM(buy_book.amount) AS Количество
+FROM buy_book JOIN book using(book_id)
+              JOIN genre using(genre_id) 
+GROUP BY genre.genre_id
+HAVING SUM(buy_book.amount) = 
+            (SELECT MAX(sum_amount) AS max_sum_amount FROM (SELECT SUM(buy_book.amount) AS sum_amount 
+            FROM buy_book 
+            INNER JOIN book ON buy_book.book_id=book.book_id
+            INNER JOIN genre ON book.genre_id=genre.genre_id
+            GROUP BY genre.genre_id)mg)    
+```
+
+</details>
+
+Шаг_14. Сравнить ежемесячную выручку от продажи книг за текущий и предыдущий годы. Для этого вывести год, месяц, сумму выручки в отсортированном сначала по возрастанию месяцев, затем по возрастанию лет виде. Название столбцов: Год, Месяц, Сумма. [(сайт)](https://stepik.org/lesson/308891/step/14?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT Year(date_payment) as 'Год' ,MONTHNAME(date_payment) as 'Месяц', sum(amount*price) as 'Сумма' 
+FROM 
+    buy_archive
+group by Year(date_payment),MONTHNAME(date_payment)   
+UNION ALL
+SELECT Year(date_step_end),MONTHNAME(date_step_end), sum(buy_book.amount*price)
+FROM 
+    book 
+    INNER JOIN buy_book USING(book_id)
+    INNER JOIN buy USING(buy_id) 
+    INNER JOIN buy_step USING(buy_id)
+    INNER JOIN step USING(step_id)                  
+WHERE  date_step_end IS NOT Null and name_step = "Оплата" 
+group by Year(date_step_end),MONTHNAME(date_step_end)
+order by Месяц asc,  Год asc  
+```
+
+</details>
+
+Шаг_15. Для каждой отдельной книги необходимо вывести информацию о количестве проданных экземпляров и их стоимости за 2020 и 2019 год . За 2020 год проданными считать те экземпляры, которые уже оплачены. Вычисляемые столбцы назвать Количество и Сумма. Информацию отсортировать по убыванию стоимости. [(сайт)](https://stepik.org/lesson/308891/step/15?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT result.title, sum(result.Количество) 'Количество', sum(result.Стоимость) 'Сумма'
+FROM 
+    (SELECT book.title, buy_book.amount 'Количество', price * buy_book.amount 'Стоимость'  
+     FROM book  JOIN buy_book USING (book_id) 
+                JOIN buy USING (buy_id) 
+                JOIN buy_step USING (buy_id) 
+     WHERE date_step_end is not null and step_id = 1     
+
+     UNION ALL
+
+     SELECT 
+     title, buy_archive.amount 'Стоимость', buy_archive.price * buy_archive.amount 'Количество'
+     FROM buy_archive
+     INNER JOIN book USING (book_id)) as result
+
+GROUP BY 1
+ORDER BY 3 DESC; 
+```
+
+</details>
+
+Шаг_16. Вывести названия книг, которые ни разу не были заказаны, отсортировав в алфавитном порядке. [(сайт)](https://stepik.org/lesson/308891/step/16?unit=291017)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT book.title FROM book
+LEFT JOIN buy_book USING(book_id)
+WHERE buy_book.amount IS NULL
+ORDER BY 1;
 ```
 
 </details>

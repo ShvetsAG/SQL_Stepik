@@ -1486,3 +1486,17 @@ select 'Попов Илья', (select city_id from city where name_city='Мос�
 
 </details>
 
+Шаг_3.Создать новый заказ для Попова Ильи. Его комментарий для заказа: «Связаться со мной по вопросу доставки». [(сайт)](https://stepik.org/lesson/310417/step/3?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+Insert into  buy  ( buy_description, client_id)
+select 'Связаться со мной по вопросу доставки',
+(select client_id from client where name_client='Попов Илья')
+```
+
+</details>
+
+

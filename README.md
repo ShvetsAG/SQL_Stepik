@@ -1472,3 +1472,17 @@ ORDER BY 1;
 
 </details>
 
+### 2.5 База данных «Интернет-магазин книг», запросы корректировки
+
+Шаг_5.Включить нового человека в таблицу с клиентами. Его имя Попов Илья, его email popov@test, проживает он в Москве. [(сайт)](https://stepik.org/lesson/310417/step/2?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+Insert into  client  (name_client, city_id, email)
+select 'Попов Илья', (select city_id from city where name_city='Москва'), 'popov@test'
+```
+
+</details>
+

@@ -1605,7 +1605,7 @@ SELECT * FROM buy_step WHERE buy_id=5;
 
 </details>
 
-Шаг_10. Ввести количество заказов, находящихся в каждом из статусов. [(сайт)](https://stepik.org/lesson/310417/step/11?unit=292723)
+Шаг_11. Ввести количество заказов, находящихся в каждом из статусов. [(сайт)](https://stepik.org/lesson/310417/step/11?unit=292723)
 
 <details>
   <summary>Решение</summary>

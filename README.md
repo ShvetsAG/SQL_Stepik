@@ -1518,4 +1518,107 @@ select 5, (select book_id from book join author using(author_id)
 
 </details>
 
+Шаг_5. Количество тех книг на складе, которые были включены в заказ с номером 5, уменьшить на то количество, которое в заказе с номером 5  указано. [(сайт)](https://stepik.org/lesson/310417/step/5?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+update book inner join buy_book using (book_id)
+set book.amount=book.amount-buy_book.amount
+where buy_book.buy_id=5;
+```
+
+</details>
+
+Шаг_6. Создать счет (таблицу buy_pay) на оплату заказа с номером 5, в который включить название книг, их автора, цену, количество заказанных книг и  стоимость. Последний столбец назвать Стоимость. Информацию в таблицу занести в отсортированном по названиям книг виде. [(сайт)](https://stepik.org/lesson/310417/step/6?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+CREATE TABLE buy_pay AS
+SELECT title, name_author, price, buy_book.amount, buy_book.amount * book.price AS Стоимость
+FROM book JOIN buy_book USING (book_id)
+          JOIN author USING (author_id)
+WHERE buy_id=5
+ORDER BY title;
+```
+
+</details>
+
+Шаг_7. Создать общий счет (таблицу buy_pay) на оплату заказа с номером 5. Куда включить номер заказа, количество книг в заказе (название столбца Количество) и его общую стоимость (название столбца Итого). Для решения используйте ОДИН запрос. [(сайт)](https://stepik.org/lesson/310417/step/7?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+CREATE TABLE buy_pay AS
+SELECT buy_book.buy_id, sum(buy_book.amount) Количество, sum(buy_book.amount * book.price) Итого
+FROM book
+INNER JOIN buy_book USING (book_id)
+WHERE buy_id=5
+group by 1;
+```
+
+</details>
+
+Шаг_8. В таблицу buy_step для заказа с номером 5 включить все этапы из таблицы step, которые должен пройти этот заказ. В столбцы date_step_beg и date_step_end всех записей занести Null. [(сайт)](https://stepik.org/lesson/310417/step/8?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+INSERT INTO buy_step (buy_id, step_id, date_step_beg, date_step_end)
+SELECT '5', step_id, NULL, NULL 
+FROM step
+WHERE step_id in (SELECT distinct step_id FROM step);
+```
+
+</details>
+
+Шаг_9. В таблицу buy_step занести дату 12.04.2020 выставления счета на оплату заказа с номером 5. Правильнее было бы занести не конкретную, а текущую дату. Это можно сделать с помощью функции Now(). Но при этом в разные дни будут вставляться разная дата, и задание нельзя будет проверить, поэтому  вставим дату 12.04.2020. [(сайт)](https://stepik.org/lesson/310417/step/9?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE buy_step
+SET date_step_beg = '2020-04-12'
+WHERE buy_id = 5 AND step_id = (SELECT step_id FROM step WHERE name_step = 'Оплата');
+```
+
+</details>
+
+Шаг_10. Завершить этап «Оплата» для заказа с номером 5, вставив в столбец date_step_end дату 13.04.2020, и начать следующий этап («Упаковка»), задав в столбце date_step_beg для этого этапа ту же дату. Реализовать два запроса для завершения этапа и начала следующего. Они должны быть записаны в общем виде, чтобы его можно было применять для любых этапов, изменив только текущий этап. Для примера пусть это будет этап «Оплата». [(сайт)](https://stepik.org/lesson/310417/step/10?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE buy_step SET date_step_end='2020-04-13'
+WHERE buy_id=5 AND step_id IN (SELECT step_id FROM step WHERE name_step ='Оплата');
+UPDATE buy_step SET date_step_beg='2020-04-13'
+WHERE buy_id=5 AND step_id IN (SELECT step_id FROM step WHERE name_step ='Упаковка');
+SELECT * FROM buy_step WHERE buy_id=5;
+```
+
+</details>
+
+Шаг_10. Ввести количество заказов, находящихся в каждом из статусов. [(сайт)](https://stepik.org/lesson/310417/step/11?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT name_step, count(bs.step_id) "Количество заказов"
+FROM step s LEFT JOIN buy_step bs 
+ON s.step_id=bs.step_id and date_step_beg AND date_step_end IS NULL
+GROUP BY name_step 
+ORDER BY 1
+```
+
+</details>
+
+
 

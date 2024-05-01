@@ -1499,4 +1499,23 @@ select 'Связаться со мной по вопросу доставки',
 
 </details>
 
+Шаг_4.В таблицу buy_book добавить заказ с номером 5. Этот заказ должен содержать книгу Пастернака «Лирика» в количестве двух экземпляров и книгу Булгакова «Белая гвардия» в одном экземпляре. [(сайт)](https://stepik.org/lesson/310417/step/4?unit=292723)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+Insert into  buy_book  ( buy_id, book_id, amount )
+
+select 5, (select book_id from book join author using(author_id)
+           where title ='Лирика' and name_author like 'Пастер%'), 2
+           
+UNION ALL
+
+select 5, (select book_id from book join author using(author_id)
+           where title ='Белая гвардия' and name_author like 'Булгак%'), 1
+```
+
+</details>
+
 

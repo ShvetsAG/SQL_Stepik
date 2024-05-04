@@ -1637,5 +1637,158 @@ order by result desc
 
 </details>
 
+Шаг_3. Вывести, сколько попыток сделали студенты по каждой дисциплине, а также средний результат попыток, который округлить до 2 знаков после запятой. Под результатом попытки понимается процент правильных ответов на вопросы теста, который занесен в столбец result.  В результат включить название дисциплины, а также вычисляемые столбцы Количество и Среднее. Информацию вывести по убыванию средних результатов. [(сайт)](https://stepik.org/lesson/310421/step/3?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_subject, count(attempt_id ) as 'Количество', round(avg(result),2) as 'Среднее' 
+from subject left join attempt using(subject_id)
+group by name_subject
+order by 3 desc 
+
+```
+
+</details>
+
+Шаг_4. Вывести студентов (различных студентов), имеющих максимальные результаты попыток. Информацию отсортировать в алфавитном порядке по фамилии студента.
+Максимальный результат не обязательно будет 100%, поэтому явно это значение в запросе не задавать. [(сайт)](https://stepik.org/lesson/310421/step/4?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_student, result     
+from student join attempt using(student_id)
+where result = (select max(result) from attempt)
+order by name_student  
+
+```
+
+</details>
+
+Шаг_5. Если студент совершал несколько попыток по одной и той же дисциплине, то вывести разницу в днях между первой и последней попыткой. В результат включить фамилию и имя студента, название дисциплины и вычисляемый столбец Интервал. Информацию вывести по возрастанию разницы. Студентов, сделавших одну попытку по дисциплине, не учитывать.  [(сайт)](https://stepik.org/lesson/310421/step/5?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT name_student, name_subject, DATEDIFF(MAX(date_attempt), MIN(date_attempt)) AS Интервал 
+FROM student JOIN attempt USING(student_id)
+             JOIN subject USING(subject_id)
+GROUP BY student_id, name_subject
+HAVING COUNT(date_attempt)>1
+ORDER BY Интервал; 
+
+```
+
+</details>
+
+Шаг_6. Студенты могут тестироваться по одной или нескольким дисциплинам (не обязательно по всем). Вывести дисциплину и количество уникальных студентов (столбец назвать Количество), которые по ней проходили тестирование . Информацию отсортировать сначала по убыванию количества, а потом по названию дисциплины. В результат включить и дисциплины, тестирование по которым студенты еще не проходили, в этом случае указать количество студентов 0.  [(сайт)](https://stepik.org/lesson/310421/step/6?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_subject, count(distinct student_id) as 'Количество'
+from subject left join attempt using(subject_id)
+group by name_subject
+order by 2 desc, 1 asc 
+
+```
+
+</details>
+
+Шаг_7. Случайным образом отберите 3 вопроса по дисциплине «Основы баз данных». В результат включите столбцы question_id и name_question.  [(сайт)](https://stepik.org/lesson/310421/step/7?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select question_id, name_question
+from question join subject using(subject_id)
+where name_subject = 'Основы баз данных'
+ORDER BY RAND()
+limit 3
+
+```
+
+</details>
+
+Шаг_8. Вывести вопросы, которые были включены в тест для Семенова Ивана по дисциплине «Основы SQL» 2020-05-17  (значение attempt_id для этой попытки равно 7). Указать, какой ответ дал студент и правильный он или нет (вывести Верно или Неверно). В результат включить вопрос, ответ и вычисляемый столбец  Результат.  [(сайт)](https://stepik.org/lesson/310421/step/8?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select  name_question, name_answer, IF(is_correct = 1,'Верно','Неверно') as 'Результат'   
+from question join  testing using (question_id)
+              join  answer using (answer_id)
+where attempt_id = 7 
+
+```
+
+</details>
+
+Шаг_9. Посчитать результаты тестирования. Результат попытки вычислить как количество правильных ответов, деленное на 3 (количество вопросов в каждой попытке) и умноженное на 100. Результат округлить до двух знаков после запятой. Вывести фамилию студента, название предмета, дату и результат. Последний столбец назвать Результат. Информацию отсортировать сначала по фамилии студента, потом по убыванию даты попытки.  [(сайт)](https://stepik.org/lesson/310421/step/9?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT name_student, name_subject, date_attempt, ROUND(SUM(answer.is_correct)/3*100, 2) AS Результат
+FROM answer
+        JOIN testing USING(answer_id)
+        JOIN attempt USING(attempt_id)
+        JOIN subject USING(subject_id)     
+        JOIN student USING(student_id)
+GROUP BY name_student, name_subject, date_attempt
+ORDER BY name_student, date_attempt DESC
+
+```
+
+</details>
+
+Шаг_10. Для каждого вопроса вывести процент успешных решений, то есть отношение количества верных ответов к общему количеству ответов, значение округлить до 2-х знаков после запятой. Также вывести название предмета, к которому относится вопрос, и общее количество ответов на этот вопрос. В результат включить название дисциплины, вопросы по ней (столбец назвать Вопрос), а также два вычисляемых столбца Всего_ответов и Успешность. Информацию отсортировать сначала по названию дисциплины, потом по убыванию успешности, а потом по тексту вопроса в алфавитном порядке.  [(сайт)](https://stepik.org/lesson/310421/step/10?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT name_subject, 
+       concat(LEFT(name_question,30),'...') as Вопрос, 
+       COUNT(name_question) AS Всего_ответов, 
+       ROUND(100 / COUNT(name_question) * SUM(is_correct), 2) AS Успешность
+FROM answer a
+             JOIN testing t ON a.answer_id = t.answer_id
+             JOIN question q ON q.question_id = t.question_id
+             JOIN subject s ON s.subject_id = q.subject_id
+
+GROUP BY 1, 2
+ORDER BY 1, 4 DESC, 2;
+
+```
+
+</details>
+
+Шаг_11. Вывести максимальную оценку студента по каждому предмету, а также вердикт Зачет/Незачет (если результат не менее 70%, то зачет). Если студент не сдавал предмет, оценка по нему будет 0. Результат отсортировать по имени студента и названию предмета.  [(сайт)](https://stepik.org/lesson/310421/step/11?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT name_student, name_subject, IF(MAX(result) IS NULL, 0, MAX(result)) As Результат, IF(MAX(result)>70, 'Зачет', 'Незачет') As Результат
+FROM student CROSS JOIN subject
+LEFT JOIN attempt USING(student_id,subject_id)
+GROUP BY student_id, subject_id
+ORDER BY name_student, name_subject
+
+```
+
+</details>
+
+
+
 
 

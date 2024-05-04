@@ -1620,5 +1620,22 @@ ORDER BY 1
 
 </details>
 
+### 3.1 База данных «Тестирование», запросы на выборку
+
+Шаг_2. Вывести студентов, которые сдавали дисциплину «Основы баз данных», указать дату попытки и результат. Информацию вывести по убыванию результатов тестирования. [(сайт)](https://stepik.org/lesson/310421/step/2?unit=292727)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_student, date_attempt, result
+from student join attempt using(student_id)
+             join subject using(subject_id)
+where  name_subject = 'Основы баз данных'
+order by result desc
+```
+
+</details>
+
 
 

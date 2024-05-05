@@ -1788,6 +1788,101 @@ ORDER BY name_student, name_subject
 
 </details>
 
+### 3.2 База данных «Тестирование», запросы корректировки
+
+Шаг_2. В таблицу attempt включить новую попытку для студента Баранова Павла по дисциплине «Основы баз данных». Установить текущую дату в качестве даты выполнения попытки. [(сайт)](https://stepik.org/lesson/310422/step/2?unit=292728)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+INSERT INTO attempt (student_id,subject_id, date_attempt,result)
+values ((select  student_id from student where name_student='Баранов Павел'),
+       (select  subject_id from subject where name_subject='Основы баз данных'),
+       NOW(),null);
+
+select * from attempt
+```
+
+</details>
+
+Шаг_3. Случайным образом выбрать три вопроса (запрос) по дисциплине, тестирование по которой собирается проходить студент, занесенный в таблицу attempt последним, и добавить их в таблицу testing. id последней попытки получить как максимальное значение id из таблицы attempt. [(сайт)](https://stepik.org/lesson/310422/step/3?unit=292728)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+INSERT INTO testing (attempt_id, question_id)
+
+SELECT attempt_id, question_id
+FROM question JOIN attempt USING(subject_id)
+WHERE attempt_id = (SELECT MAX(attempt_id) FROM attempt)
+ORDER BY RAND()
+limit 3
+```
+
+</details>
+
+Шаг_4. Студент прошел тестирование (то есть все его ответы занесены в таблицу testing), далее необходимо вычислить результат(запрос) и занести его в таблицу attempt для соответствующей попытки.  Результат попытки вычислить как количество правильных ответов, деленное на 3 (количество вопросов в каждой попытке) и умноженное на 100. Результат округлить до целого. [(сайт)](https://stepik.org/lesson/310422/step/4?unit=292728)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE attempt
+    SET result = (SELECT ROUND((SUM(is_correct)/3)*100, 2)
+        FROM answer INNER JOIN testing ON answer.answer_id = testing.answer_id
+        WHERE testing.attempt_id = 8)
+    WHERE attempt.attempt_id = 8;
+```
+
+</details>
+
+Шаг_5. Удалить из таблицы attempt все попытки, выполненные раньше 1 мая 2020 года. Также удалить и все соответствующие этим попыткам вопросы из таблицы testing [(сайт)](https://stepik.org/lesson/310422/step/5?unit=292728)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+DELETE FROM attempt
+WHERE date_attempt < '2020-05-01';
+```
+
+</details>
+
+Шаг_6. Создать таблицу grade в которую добавить фамилию и имя студентов, имя предмета, дату попытки сдачи, результат и столбец name_grade в которому указать 'Неудовлетворительно', если результат меньше 60, 'Удовлетворительно' если результат больше 60 и 'Отлично' если результат равен 100.
+Второй запрос. Удалить из таблицы attempt попытки с оценкой 'Неудовлетворительно'(использовать столбец name_grade)  [(сайт)](https://stepik.org/lesson/310422/step/6?unit=292728)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+CREATE TABLE grade as 
+    (SELECT 
+     name_student, 
+     name_subject, 
+     date_attempt,  
+     result,
+     IF(result = 100, 'Отлично', (IF(result > 60, 'Удовлетворительно', 'Неудовлетворительно'))) as name_grade
+     FROM student
+         JOIN attempt USING (student_id)
+         JOIN subject USING (subject_id))
+;
+     
+SELECT * FROM grade
+ORDER BY name_student;
+
+SELECT * FROM attempt;
+
+DELETE FROM attempt 
+WHERE result = ANY (SELECT result FROM grade WHERE name_grade = 'Неудовлетворительно');
+
+SELECT * FROM attempt;
+```
+
+</details>
+
+
 
 
 

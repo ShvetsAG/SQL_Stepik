@@ -1882,6 +1882,23 @@ SELECT * FROM attempt;
 
 </details>
 
+### 3.3 База данных «Абитуриент», запросы на выборку
+
+Шаг_2. Вывести абитуриентов, которые хотят поступать на образовательную программу «Мехатроника и робототехника» в отсортированном по фамилиям виде. [(сайт)](https://stepik.org/lesson/310418/step/2?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select distinct name_enrollee
+from enrollee join program_enrollee using(enrollee_id)
+              join program using(program_id)
+where name_program = 'Мехатроника и робототехника'
+order by name_enrollee
+```
+
+</details>
+
 
 
 

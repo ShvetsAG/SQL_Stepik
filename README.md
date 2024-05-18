@@ -1899,6 +1899,39 @@ order by name_enrollee
 
 </details>
 
+Шаг_3. Вывести образовательные программы, на которые для поступления необходим предмет «Информатика». Программы отсортировать в обратном алфавитном порядке. [(сайт)](https://stepik.org/lesson/310418/step/3?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_program
+from program join program_subject using (program_id)
+             join subject using (subject_id)
+where name_subject = 'Информатика'
+order by name_program desc
+```
+
+</details>
+
+Шаг_4. Выведите количество абитуриентов, сдавших ЕГЭ по каждому предмету, максимальное, минимальное и среднее значение баллов по предмету ЕГЭ. Вычисляемые столбцы назвать Количество, Максимум, Минимум, Среднее. Информацию отсортировать по названию предмета в алфавитном порядке, среднее значение округлить до одного знака после запятой. [(сайт)](https://stepik.org/lesson/310418/step/4?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_subject
+        , count(*) 'Количество'
+        , max(result) 'Максимум'
+        , min(result) 'Минимум'
+        , round(avg(result),1) 'Среднее'
+from subject join enrollee_subject using (subject_id)
+group by name_subject
+order by name_subject
+```
+
+</details>
+
 
 
 

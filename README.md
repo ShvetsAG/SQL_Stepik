@@ -1932,6 +1932,147 @@ order by name_subject
 
 </details>
 
+Шаг_5. Вывести образовательные программы, для которых минимальный балл ЕГЭ по каждому предмету больше или равен 40 баллам. Программы вывести в отсортированном по алфавиту виде. [(сайт)](https://stepik.org/lesson/310418/step/5?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_program
+from program join program_subject using (program_id)
+group by name_program
+having min(min_result) >=40
+order by name_program
+```
+
+</details>
+
+Шаг_6. Вывести образовательные программы, которые имеют самый большой план набора,  вместе с этой величиной. [(сайт)](https://stepik.org/lesson/310418/step/6?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+WITH _table AS (
+            SELECT name_program, plan,
+            RANK() OVER (ORDER BY plan DESC) _rank
+            FROM program)
+
+SELECT name_program, plan
+FROM _table
+WHERE _rank = 1
+```
+
+</details>
+
+Шаг_7. Посчитать, сколько дополнительных баллов получит каждый абитуриент. Столбец с дополнительными баллами назвать Бонус. Информацию вывести в отсортированном по фамилиям виде. [(сайт)](https://stepik.org/lesson/310418/step/7?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_enrollee, COALESCE(sum(bonus),0) 'Бонус'
+from enrollee left join enrollee_achievement using (enrollee_id)
+              left join achievement using (achievement_id)
+group by name_enrollee
+order by name_enrollee
+```
+
+</details>
+
+Шаг_8. Выведите сколько человек подало заявление на каждую образовательную программу и конкурс на нее (число поданных заявлений деленное на количество мест по плану), округленный до 2-х знаков после запятой. В запросе вывести название факультета, к которому относится образовательная программа, название образовательной программы, план набора абитуриентов на образовательную программу (plan), количество поданных заявлений (Количество) и Конкурс. Информацию отсортировать в порядке убывания конкурса. [(сайт)](https://stepik.org/lesson/310418/step/8?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_department,  name_program, plan
+        ,count(enrollee_id) 'Количество'
+        ,round(count(enrollee_id)/plan,2) 'Конкурс'
+from program join program_enrollee using (program_id)
+             join department using (department_id)             
+group by name_department,  name_program, plan
+order by Конкурс desc
+```
+
+</details>
+
+Шаг_9. Вывести образовательные программы, на которые для поступления необходимы предмет «Информатика» и «Математика» в отсортированном по названию программ виде. [(сайт)](https://stepik.org/lesson/310418/step/9?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select  name_program
+from program join program_subject using (program_id)
+             join subject using (subject_id)
+where name_subject in ('Информатика', 'Математика')
+group by name_program
+having count(*) = 2
+order by name_program
+```
+
+</details>
+
+Шаг_10. Посчитать количество баллов каждого абитуриента на каждую образовательную программу, на которую он подал заявление, по результатам ЕГЭ. В результат включить название образовательной программы, фамилию и имя абитуриента, а также столбец с суммой баллов, который назвать itog. Информацию вывести в отсортированном сначала по образовательной программе, а потом по убыванию суммы баллов виде. [(сайт)](https://stepik.org/lesson/310418/step/10?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+select name_program, name_enrollee, sum(result) itog
+from enrollee join program_enrollee using (enrollee_id)
+              join program using (program_id)
+              join program_subject using (program_id)
+              join subject using (subject_id)    
+              join enrollee_subject using(subject_id, enrollee_id)
+              
+group by name_program, name_enrollee
+order by 1 asc, 3 desc
+```
+
+</details>
+
+Шаг_11. Вывести название образовательной программы и фамилию тех абитуриентов, которые подавали документы на эту образовательную программу, но не могут быть зачислены на нее. Эти абитуриенты имеют результат по одному или нескольким предметам ЕГЭ, необходимым для поступления на эту образовательную программу, меньше минимального балла. Информацию вывести в отсортированном сначала по программам, а потом по фамилиям абитуриентов виде.
+Например, Баранов Павел по «Физике» набрал 41 балл, а  для образовательной программы «Прикладная механика» минимальный балл по этому предмету определен в 45 баллов. Следовательно, абитуриент на данную программу не может поступить. [(сайт)](https://stepik.org/lesson/310418/step/11?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT
+    name_program,
+    name_enrollee
+FROM
+    enrollee e
+    JOIN program_enrollee pe USING(enrollee_id)
+    JOIN program USING(program_id)
+    JOIN program_subject ps USING(program_id)
+    JOIN enrollee_subject es 
+        ON es.subject_id = ps.subject_id
+        AND es.enrollee_id = e.enrollee_id
+        AND ps.min_result >= es.result
+ORDER BY
+    name_program ASC,
+    name_enrollee ASC;
+```
+
+</details>
+
+Шаг_11. Вывести имена студентов и названия программ, на которые они НЕ подавали документы. [(сайт)](https://stepik.org/lesson/310418/step/12?unit=292724)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SELECT name_enrollee, name_program
+FROM enrollee CROSS JOIN program
+LEFT JOIN program_enrollee USING(program_id, enrollee_id)
+WHERE program_enrollee_id IS NULL
+```
+
+</details>
+
 
 
 

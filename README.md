@@ -2097,6 +2097,50 @@ select * from applicant
 
 </details>
 
+Шаг_3. Из таблицы applicant, созданной на предыдущем шаге, удалить записи, если абитуриент на выбранную образовательную программу не набрал минимального балла хотя бы по одному предмету (использовать запрос из предыдущего урока). [(сайт)](https://stepik.org/lesson/310420/step/3?unit=292726)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+DELETE from applicant a
+WHERE (a.program_id, a.enrollee_id) IN 
+        (
+        SELECT p.program_id, e.enrollee_id
+        FROM enrollee e
+        INNER JOIN program_enrollee pe ON e.enrollee_id = pe.enrollee_id
+        INNER JOIN program p ON p.program_id = pe.program_id
+        INNER JOIN program_subject ps ON ps.program_id = p.program_id
+        INNER JOIN subject s ON s.subject_id = ps.subject_id
+        INNER JOIN enrollee_subject es ON s.subject_id = es.subject_id and e.enrollee_id = es.enrollee_id
+        WHERE es.result < ps.min_result
+        );
+
+select * from applicant;
+```
+
+</details>
+
+Шаг_4. Повысить итоговые баллы абитуриентов в таблице applicant на значения дополнительных баллов (использовать запрос из предыдущего урока). [(сайт)](https://stepik.org/lesson/310420/step/4?unit=292726)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+UPDATE applicant 
+       INNER JOIN (
+                   SELECT enrollee_id, SUM(IF(achievement_id IS NULL, 0, bonus)) AS extra_points
+                   FROM enrollee
+                   LEFT JOIN enrollee_achievement USING(enrollee_id)
+                   LEFT JOIN achievement USING(achievement_id)
+                   GROUP BY enrollee_id
+                   ) AS Bonus USING(enrollee_id)
+SET itog = itog + extra_points;
+SELECT * FROM applicant;
+```
+
+</details>
+
 
 
 

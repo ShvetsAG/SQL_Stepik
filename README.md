@@ -2184,6 +2184,42 @@ SET str_id = IF(program_id = @pr_num, @row_num := @row_num + 1, @row_num := 1 AN
 
 </details>
 
+Шаг_8. Создать таблицу student,  в которую включить абитуриентов, которые могут быть рекомендованы к зачислению  в соответствии с планом набора. Информацию отсортировать сначала в алфавитном порядке по названию программ, а потом по убыванию итогового балла. [(сайт)](https://stepik.org/lesson/310420/step/8?unit=292726)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+create table student
+select name_program,  name_enrollee, itog 
+from enrollee e
+JOIN applicant_order a USING (enrollee_id)
+JOIN program p USING (program_id) 
+WHERE a.str_id<=p.plan
+order by 1 asc, 3  desc;
+```
+
+</details>
+
+Шаг_9. Создать таблицу  im_in_the_army_now, в которую включить студентов, которые не смогли поступить ни на одну специальность. В таблицу включить фамилию и имя студента и его итоговый балл. [(сайт)](https://stepik.org/lesson/310420/step/9?unit=292726)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+CREATE TABLE in_army_now AS
+SELECT enrollee.name_enrollee, applicant_order.itog
+FROM enrollee
+LEFT JOIN student ON enrollee.name_enrollee = student.name_enrollee
+INNER JOIN applicant_order ON enrollee.enrollee_id = applicant_order.enrollee_id
+WHERE student.itog IS NULL;
+
+SELECT * FROM in_army_now;
+```
+
+</details>
+
+
 
 
 

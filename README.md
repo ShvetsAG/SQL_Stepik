@@ -2219,6 +2219,38 @@ SELECT * FROM in_army_now;
 
 </details>
 
+### 3.5 База данных "Учебная аналитика по курсу"
+
+Шаг_2. Отобрать все шаги, в которых рассматриваются вложенные запросы (то есть в названии шага упоминаются вложенные запросы). Указать к какому уроку и модулю они относятся. [(сайт)](https://stepik.org/lesson/404275/step/2?unit=393473)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+SET @limit = 19;
+WITH steps AS
+(
+    SELECT
+        module_id, lesson_id, lesson_position, step_id, step_position,
+        CONCAT(module_id, ' ' , module_name) AS Модуль,
+        CONCAT(module_id, '.', lesson_position, ' ' , lesson_name) AS Урок,
+        CONCAT(module_id, '.', lesson_position, '.', step_position, ' ' , step_name) AS Шаг
+    FROM
+        module
+        INNER JOIN lesson USING (module_id)
+        INNER JOIN step   USING (lesson_id)
+    WHERE LOWER(step_name) LIKE '%вложенн% запрос%'
+)
+SELECT
+    IF(LENGTH(Модуль) <= @limit, Модуль, CONCAT(LEFT(Модуль, @limit-3), '...')) AS Модуль,
+    IF(LENGTH(Урок)   <= @limit,   Урок, CONCAT(LEFT(  Урок, @limit-3), '...')) AS Урок,
+    Шаг
+FROM  steps
+ORDER BY module_id, lesson_position, step_position;
+```
+
+</details>
+
 
 
 

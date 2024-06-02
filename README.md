@@ -2251,6 +2251,26 @@ ORDER BY module_id, lesson_position, step_position;
 
 </details>
 
+Шаг_3. Заполнить таблицу step_keyword следующим образом: если ключевое слово есть в названии шага, то включить в step_keyword строку с id шага и id ключевого слова.  [(сайт)](https://stepik.org/lesson/404275/step/3?unit=393473)
+
+<details>
+  <summary>Решение</summary>
+
+```mysql
+INSERT INTO step_keyword (step_id, keyword_id)
+SELECT step.step_id, keyword.keyword_id
+FROM step
+CROSS JOIN keyword
+WHERE  
+INSTR(CONCAT(" ", step.step_name, " "), CONCAT(" ", keyword.keyword_name, " ")) > 0 OR
+INSTR(CONCAT(" ", step.step_name, " "), CONCAT(" ", keyword.keyword_name, ",")) > 0 OR
+INSTR(CONCAT(" ", step.step_name, " "), CONCAT(" ", keyword.keyword_name, "(")) > 0
+ORDER BY keyword.keyword_id;
+SELECT*FROM step_keyword;
+```
+
+</details>
+
 
 
 
